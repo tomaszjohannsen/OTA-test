@@ -1,6 +1,6 @@
 # --- Application Version ---
 # Change this when you make a new version!
-__version__ = "1.0.4"
+__version__ = "1.0.6"
 # --- End Application Version ---
 
 import time
@@ -47,7 +47,7 @@ connect_wifi(WIFI_SSID, WIFI_PASSWORD)
 
 
 # Define the LED pin
-led_pin = 13  #this is for the Adafruit ESP-32-S2 TFT Feather
+led_pin = 15  #this is for the XIAO ESP32--C6
 
 # Set the LED pin as an output
 led = machine.Pin(led_pin, machine.Pin.OUT)
@@ -76,4 +76,3 @@ while True:
         print("No update available or update failed. Running main application.")
         # --- Your main application logic goes here ---
 
-print("All done")
