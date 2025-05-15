@@ -1,5 +1,5 @@
 # updater.py
-# version 2.0 using 3 parameter interface and assuming network is connected.
+# version 2.1 using chunks
 # use this in a try catch structure clause, in case wifi connection breaks, etc.
 
 import uos
@@ -15,20 +15,36 @@ TEMP_MAIN_PY = "main.py.tmp"
 
 def download_update(ota_url):
     """Downloads the new main.py to a temporary file."""
-    print(f"Downloading update from {ota_url}")
+   
     try:
-        response = urequests.get(ota_url)
+        # Make the HTTP request
+        response = urequests.get(ota_url, stream=True)
+       
+        # Check if the request was successful
         if response.status_code == 200:
-            with open(TEMP_MAIN_PY, "wb") as f:
-                f.write(response.content)
+            # Open the destination file for writing in binary mode
+            with open(TEMP_MAIN_PY, 'wb') as file:
+                # Read and write the file in chunks
+                while True:
+                    chunk = response.raw.read(1024)
+                    if not chunk:
+                        break
+                    file.write(chunk)
+           
             print(f"Download successful. Saved to {TEMP_MAIN_PY}")
             return True
         else:
-            print(f"Error downloading update. Status code: {response.status_code}")
+            print(f"Failed to download file. Status code: {response.status_code}")
             return False
+           
     except Exception as e:
         print(f"Error during update download: {e}")
         raise
+    finally:
+        # Make sure to close the response
+        if 'response' in locals():
+            response.close()
+
 
 def install_update():
     """Installs the downloaded update by replacing main.py."""
