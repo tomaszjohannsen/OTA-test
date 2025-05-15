@@ -9,13 +9,12 @@ import machine
 import time
 import network
 
-# --- Wi-Fi Credentials (can be imported or defined here) ---
-# It's often better to define these once in boot.py or a config file
-# but for this example, let's pass them to the updater function
-# REPLACE WITH YOURS
+# --- Config
 WIFI_SSID = "Johannet_Guest"
 WIFI_PASSWORD = ""
-# --- End Wi-Fi Credentials ---
+UPDATE_URL_BASE = "https://raw.githubusercontent.com/tomaszjohannsen/OTA-test/main/"
+MAIN_PY_URL = UPDATE_URL_BASE + "main.py"
+# --- End Config
 
 def connect_wifi(ssid, password):
     """Connect to Wi-Fi."""
@@ -38,6 +37,8 @@ def connect_wifi(ssid, password):
     else:
         print("Wi-Fi already connected:", sta_if.ifconfig())
     return sta_if.isconnected()
+
+
 
 
 print(f"--- Starting Main Application (Version: {__version__}) ---")
@@ -64,15 +65,18 @@ while True:
   led.value(0)
   # Wait for 0.5 seconds
   time.sleep_ms(500)
-  if counter > 5 :
+  if counter > 4 :
       print("Checking for OTA updates...")
       counter = 0
-      update_successful = updater.update_if_available(WIFI_SSID, WIFI_PASSWORD)
-      if update_successful:
-        # The updater initiated a reboot, this code won't be reached after successful update
-        pass
-      else:
-        # No update or update failed, continue with main application logic
-        print("No update available or update failed. Running main application.")
-        # --- Your main application logic goes here ---
+      try:
+        update_successful = updater.update_if_available(__version__, "3.3.3", MAIN_PY_URL )
+        if update_successful:
+            # The updater initiated a reboot, this code won't be reached after successful update
+            pass
+        else:
+            # No update or update failed, continue with main application logic
+            print("No update available or update failed. Running main application.")
+            # --- Your main application logic goes here ---
+      except Exception as e:
+        print(f"Error during update installation: {e}")
 
