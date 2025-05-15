@@ -1,6 +1,6 @@
 # --- Application Version ---
 # Change this when you make a new version!
-__version__ = "1.0.6"
+__version__ = "3.3.3"
 # --- End Application Version ---
 
 import time
