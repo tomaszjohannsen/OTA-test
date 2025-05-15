@@ -1,3 +1,7 @@
+# updater.py
+# version 2.0 using 3 parameter interface and assuming network is connected.
+# use this in a try catch structure clause, in case wifi connection breaks, etc.
+
 import uos
 import urequests
 import network
@@ -5,74 +9,15 @@ import time
 import machine
 
 # --- Configuration ---
-# Replace with the base URL of your web server hosting updates
-UPDATE_URL_BASE = "https://raw.githubusercontent.com/tomaszjohannsen/OTA-test/main/"
-VERSION_FILE_URL = UPDATE_URL_BASE + "version.txt"
-MAIN_PY_URL = UPDATE_URL_BASE + "main.py"
 TEMP_MAIN_PY = "main.py.tmp"
 # --- End Configuration ---
 
-def connect_wifi(ssid, password):
-    """Connect to Wi-Fi."""
-    sta_if = network.WLAN(network.STA_IF)
-    if not sta_if.isconnected():
-        print("Connecting to Wi-Fi...")
-        sta_if.active(True)
-        sta_if.connect(ssid, password)
-        # Wait for connection with a timeout
-        timeout = 20 # seconds
-        while not sta_if.isconnected() and timeout > 0:
-            print(".", end="")
-            time.sleep(1)
-            timeout -= 1
-        print()
-        if sta_if.isconnected():
-            print("Wi-Fi connected:", sta_if.ifconfig())
-        else:
-            print("Wi-Fi connection failed!")
-    else:
-        print("Wi-Fi already connected:", sta_if.ifconfig())
-    return sta_if.isconnected()
 
-def get_current_version():
-    """Reads the current version from main.py."""
-    # A simple way: look for a __version__ line in the current main.py file
-    current_version = "0.0.0" # Default if not found
-    try:
-        with open("main.py", "r") as f:
-            for line in f:
-                if line.strip().startswith("__version__ ="):
-                    # Extract the version string
-                    version_str = line.split("=")[1].strip().strip('"').strip("'")
-                    current_version = version_str
-                    break
-    except Exception as e:
-        print(f"Error reading current version: {e}")
-        # If main.py doesn't exist or can't be read, assume base version
-        pass
-    print(f"Current device version: {current_version}")
-    return current_version
-
-def get_latest_version():
-    """Fetches the latest version from the server."""
-    latest_version = None
-    try:
-        print(f"Checking latest version from {VERSION_FILE_URL}")
-        response = urequests.get(VERSION_FILE_URL)
-        if response.status_code == 200:
-            latest_version = response.text.strip()
-            print(f"Latest server version: {latest_version}")
-        else:
-            print(f"Error fetching version file. Status code: {response.status_code}")
-    except Exception as e:
-        print(f"Error during latest version check: {e}")
-    return latest_version
-
-def download_update():
+def download_update(ota_url):
     """Downloads the new main.py to a temporary file."""
-    print(f"Downloading update from {MAIN_PY_URL}")
+    print(f"Downloading update from {ota_url}")
     try:
-        response = urequests.get(MAIN_PY_URL)
+        response = urequests.get(ota_url)
         if response.status_code == 200:
             with open(TEMP_MAIN_PY, "wb") as f:
                 f.write(response.content)
@@ -83,7 +28,7 @@ def download_update():
             return False
     except Exception as e:
         print(f"Error during update download: {e}")
-        return False
+        raise
 
 def install_update():
     """Installs the downloaded update by replacing main.py."""
@@ -146,24 +91,13 @@ def compare_versions(current, latest):
         return latest > current
 
 
-def update_if_available(ssid, password):
+def update_if_available(current_version, ota_version, ota_url):
     """Checks for and performs an OTA update if available."""
     print("Starting OTA update check...")
 
-    if not connect_wifi(ssid, password):
-        print("Skipping update check due to Wi-Fi connection failure.")
-        return False
-
-    current_version = get_current_version()
-    latest_version = get_latest_version()
-
-    if latest_version is None:
-        print("Could not get latest version from server. Skipping update.")
-        return False
-
-    if compare_versions(current_version, latest_version):
-        print(f"New version {latest_version} available. Current version {current_version}.")
-        if download_update():
+    if compare_versions(current_version, ota_version):
+        print(f"New version {ota_version} available. Current version {current_version}.")
+        if download_update(ota_url):
             if install_update():
                 print("Update successful! Rebooting to apply...")
                 # Small delay to let print messages flush
@@ -177,5 +111,3 @@ def update_if_available(ssid, password):
     else:
         print("Device is already running the latest version.")
         return False # No update needed or available
-
-
