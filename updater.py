@@ -1,5 +1,6 @@
 # updater.py
-# version 2.1 using chunks
+# version 3.0 has sanity check to verify proper "main" name protection, python lib loading and version number verification
+# version 2.0 using 3 parameter interface and assuming network is connected.
 # use this in a try catch structure clause, in case wifi connection breaks, etc.
 
 import uos
@@ -9,12 +10,19 @@ import time
 import machine
 
 # --- Configuration ---
-TEMP_MAIN_PY = "main.py.tmp"
+TEMP_MAIN_PY = "maintmp.py"
 # --- End Configuration ---
 
 
 def download_update(ota_url):
     """Downloads the new main.py to a temporary file."""
+   
+    try:
+        uos.remove(TEMP_MAIN_PY)
+        print(f"Removed old {TEMP_MAIN_PY}")
+    except OSError:
+        print(f"No existing {TEMP_MAIN_PY} to remove.") # File might not exist yet
+   
    
     try:
         # Make the HTTP request
@@ -45,6 +53,73 @@ def download_update(ota_url):
         if 'response' in locals():
             response.close()
 
+def check_main_guard():
+    pattern = "if__name__==\"__main__\":"  # No whitespace version of what we're looking for
+   
+    try:
+        with open(TEMP_MAIN_PY, 'r') as file:
+            for line in file:
+                # Remove all whitespace and compare
+                clean_line = ''.join(line.split())
+                if clean_line == pattern:
+                    return True
+           
+        # If we get here, we didn't find the pattern
+        return False
+    except OSError as e:
+        print(f"Error reading {filename}: {e}")
+        return False
+
+def check_version(expected_version):
+    module_name = TEMP_MAIN_PY
+    module_name = module_name.split('.')[0]
+    print(f"Checking version is module {module_name}")
+    try:
+        # Import the sys module for manipulating the import system
+        import sys
+       
+        # Remove the module from sys.modules if it was previously imported
+        # This ensures we get a fresh import with the latest version
+        if module_name in sys.modules:
+            del sys.modules[module_name]
+       
+        # Import the module
+        module = __import__(module_name)
+       
+        # Check if __version__ exists
+        if hasattr(module, '__version__'):
+            version = module.__version__
+            print(f"Module {module_name} version: {version}")
+           
+            return version == expected_version
+        else:
+            print(f"Module {module_name} has no __version__ attribute")
+            return False
+    except ImportError as e:
+        print(f"Error importing {module_name}: {e}")
+        return False
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        return False
+
+def sanity_check(ota_version):
+    """Verifies a few things about the downloaded file before installing."""
+    print("Doing sanity checks...")
+
+    # First check the main guard line
+    if check_main_guard():
+        print("Check guard for 'main.py' passed.")
+        # Second, check that it loads as a python library. temp = importlib.import_module('main-temp') Then you can check temp.__version__ to confirm.
+        if check_version(ota_version):
+            print("File version matches ota version.")
+            return True
+        else:
+            print("Version in file does not match latest ota version.")
+            return False                
+    else:
+        print("Could not find __main__ guard check in latest version.")
+        return False
+           
 
 def install_update():
     """Installs the downloaded update by replacing main.py."""
@@ -114,16 +189,22 @@ def update_if_available(current_version, ota_version, ota_url):
     if compare_versions(current_version, ota_version):
         print(f"New version {ota_version} available. Current version {current_version}.")
         if download_update(ota_url):
-            if install_update():
-                print("Update successful! Rebooting to apply...")
-                # Small delay to let print messages flush
-                time.sleep(3)
-                machine.reset() # Reboot the device
+            if sanity_check(ota_version):
+                if install_update():
+                    print("Update successful! Rebooting to apply...")
+                    # Small delay to let print messages flush
+                    time.sleep(2)
+                    machine.reset() # Reboot the device
+                else:
+                    print("Update installation failed.")
             else:
-                print("Update installation failed.")
+                print("Sanity check failed.")
         else:
             print("Update download failed.")
+           
         return True # Signifies that an attempt was made or completed
     else:
         print("Device is already running the latest version.")
         return False # No update needed or available
+
+
