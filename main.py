@@ -41,7 +41,7 @@ def connect_wifi(ssid, password):
 
 # Code execution protection pattern by Claude
 if __name__ == "__main__":
-    print(f"--- Starting Main Application (Version: {__version__}) ---")
+    print(f"--- Starting Main Application (Version: {__vers__}) ---")
     # Connect to Wi-Fi on boot
     # Note: We don't call the updater here directly.
     connect_wifi(WIFI_SSID, WIFI_PASSWORD)
