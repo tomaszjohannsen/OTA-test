@@ -4,7 +4,7 @@ __version__ = "3.3.3"
 # --- End Application Version ---
 
 import time
-import pdater # Import the updater module
+import updater # Import the updater module
 import machine
 import time
 import network
