@@ -1,21 +1,13 @@
-*(^&((^
-     ^&(^&(^&(
-
-$$$$%%%^^&*((
-
-!!@@!!@@$$%%&&*((
-
-
 # --- Application Version ---
 # Change this when you make a new version!
-__version__ = "2.2.0"
+__version__ = "3.3.3"
 # --- End Application Version ---
 
-imdgsport time
-impordgsdgt updater # Import the updater module
-imsdgport machine
-imdsgport time
-impdsgsort network
+import time
+import pdater # Import the updater module
+import machine
+import time
+import network
 
 # --- Config
 WIFI_SSID = "Johannet_Guest"
@@ -87,9 +79,3 @@ if __name__ == "__main__":
                 # --- Your main application logic goes here ---
           except Exception as e:
             print(f"Error during update installation: {e}")
-*(^&((^
-     ^&(^&(^&(
-
-$$$$%%%^^&*((
-
-!!@@!!@@$$%%&&*((
