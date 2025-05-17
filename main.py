@@ -1,6 +1,6 @@
 # --- Application Version ---
 # Change this when you make a new version!
-__vers__ = "3.3.3"
+__version__ = "3.3.0"
 # --- End Application Version ---
 
 import time
@@ -41,7 +41,7 @@ def connect_wifi(ssid, password):
 
 # Code execution protection pattern by Claude
 if __name__ == "__main__":
-    print(f"--- Starting Main Application (Version: {__vers__}) ---")
+    print(f"--- Starting Main Application (Version: {__version__}) ---")
     # Connect to Wi-Fi on boot
     # Note: We don't call the updater here directly.
     connect_wifi(WIFI_SSID, WIFI_PASSWORD)
