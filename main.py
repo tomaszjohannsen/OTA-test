@@ -8,14 +8,14 @@ $$$$%%%^^&*((
 
 # --- Application Version ---
 # Change this when you make a new version!
-__version__ = "3.3.0"
+__version__ = "2.2.0"
 # --- End Application Version ---
 
-import time
-import updater # Import the updater module
-import machine
-import time
-import network
+imdgsport time
+impordgsdgt updater # Import the updater module
+imsdgport machine
+imdsgport time
+impdsgsort network
 
 # --- Config
 WIFI_SSID = "Johannet_Guest"
